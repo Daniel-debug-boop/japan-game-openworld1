@@ -23,14 +23,51 @@ var spawn_position := Vector3(0.0, 60.0, 0.0)
 
 var smoke_mode := false
 
+## Visual acceptance capture requested with `-- --visual-capture[=dir]`.
+var capture_mode := false
+var capture_out_dir := "user://screenshots"
+var capture_video_frames := 0
+
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	var args := OS.get_cmdline_user_args()
 	# Packaged-build self check: `-- --smoke-test` boots straight into the world.
-	if "--smoke-test" in OS.get_cmdline_user_args():
+	if "--smoke-test" in args:
 		smoke_mode = true
 		print("[smoke] booting world directly")
 		start_new_game.call_deferred()
+	# Visual acceptance: boot the real world and let the capture driver drive it.
+	# The driver lives in scripts/, so this works in the exported game too.
+	elif is_capture_requested():
+		capture_mode = true
+		capture_out_dir = capture_requested_dir()
+		capture_video_frames = capture_requested_video_frames()
+		print("[capture] booting world directly, output -> %s" % capture_out_dir)
+		start_new_game.call_deferred()
+
+
+func is_capture_requested() -> bool:
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--visual-capture"):
+			return true
+	return false
+
+
+func capture_requested_dir() -> String:
+	const PREFIX := "--visual-capture="
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with(PREFIX):
+			return a.substr(PREFIX.length())
+	return "user://screenshots"
+
+
+func capture_requested_video_frames() -> int:
+	const PREFIX := "--capture-video="
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with(PREFIX):
+			return int(a.substr(PREFIX.length()))
+	return 0
 
 
 func _process(delta: float) -> void:

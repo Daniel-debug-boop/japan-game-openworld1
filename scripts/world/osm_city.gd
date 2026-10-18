@@ -14,6 +14,16 @@ const CHUNK_GRID := 16
 const LEVEL_HEIGHT := 3.2
 const BUILDING_MIN_HEIGHT := 2.8
 
+## Per-channel correction applied to the facade albedo. Poly Haven's
+## `painted_concrete` albedo is a *green*-painted wall (measured mean RGB
+## 72,106,79); used raw it painted every Kyoto facade mint-green and, because the
+## texture tiles densely in world space, the distant city averaged to flat green
+## blocks. Solved so the texture's surface detail survives while the hue becomes
+## concrete grey, without raising brightness:
+##   (0.282, 0.416, 0.310) * (1.25, 0.85, 1.15) = (0.352, 0.354, 0.357)
+## tests/validate_project.gd asserts the resulting effective albedo stays neutral.
+const FACADE_TINT := Color(1.25, 0.85, 1.15)
+
 var _terrain: TerrainStreamer
 var _world_x: float = 4000.0
 var _world_z: float = 4000.0
@@ -74,7 +84,7 @@ func _build_materials() -> void:
 		_road_material.normal_texture = asphalt_n
 
 	_building_material = StandardMaterial3D.new()
-	_building_material.albedo_color = Color(0.76, 0.74, 0.70)
+	_building_material.albedo_color = FACADE_TINT
 	_building_material.roughness = 0.8
 	_building_material.uv1_scale = Vector3(0.5, 0.5, 1)
 	_building_material.uv1_triplanar = true

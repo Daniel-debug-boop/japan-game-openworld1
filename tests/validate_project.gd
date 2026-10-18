@@ -19,6 +19,7 @@ func _init() -> void:
 	_check_data_files()
 	_check_plateau()
 	_check_assets()
+	_check_facade_materials()
 	_check_autoloads()
 	_report()
 	quit(1 if not _failures.is_empty() else 0)
@@ -268,6 +269,68 @@ func _check_assets() -> void:
 			_pass("asset present: " + path)
 		else:
 			_fail("missing asset: " + path)
+
+
+## The facade albedo is a green-painted concrete texture, so both building renderers
+## correct it with a per-channel tint (FACADE_TINT). If that correction is dropped the
+## whole city turns mint-green — which is exactly how the failed visual acceptance run
+## looked. Measure the effective albedo here so it cannot regress silently.
+func _check_facade_materials() -> void:
+	print("\n[facade materials]")
+	var albedo_path := "res://assets/textures/painted_concrete/painted_concrete_albedo.jpg"
+	if not FileAccess.file_exists(albedo_path):
+		_fail("facade albedo missing: " + albedo_path)
+		return
+
+	var tex := load(albedo_path) as Texture2D
+	if tex == null:
+		_fail("facade albedo did not load (was the project imported?): " + albedo_path)
+		return
+
+	# Mean colour of the texture, sampled on a grid so the check stays cheap.
+	var img := tex.get_image()
+	if img == null:
+		_fail("facade albedo has no image data: " + albedo_path)
+		return
+	var step := maxi(1, img.get_width() / 64)
+	var samples := 0
+	var mean := Vector3.ZERO
+	for y in range(0, img.get_height(), step):
+		for x in range(0, img.get_width(), step):
+			var c := img.get_pixel(x, y)
+			mean += Vector3(c.r, c.g, c.b)
+			samples += 1
+	mean /= maxf(1.0, float(samples))
+	print("  info  facade albedo mean RGB = (%.3f, %.3f, %.3f)" % [mean.x, mean.y, mean.z])
+
+	for script_path in ["res://scripts/world/osm_city.gd", "res://scripts/world/plateau_city.gd"]:
+		var tint := _read_facade_tint(script_path)
+		if tint == Vector3.ZERO:
+			_fail("could not read FACADE_TINT from " + script_path)
+			continue
+		var effective := Vector3(mean.x * tint.x, mean.y * tint.y, mean.z * tint.z)
+		var dominance := effective.y - (effective.x + effective.z) * 0.5
+		if absf(dominance) > 0.03:
+			_fail("%s renders facades with a colour cast (effective RGB %.3f, %.3f, %.3f)" % [
+				script_path, effective.x, effective.y, effective.z])
+		elif effective.length() < 0.15 or effective.length() > 1.6:
+			_fail("%s facade albedo is out of range (%.3f, %.3f, %.3f)" % [
+				script_path, effective.x, effective.y, effective.z])
+		else:
+			_pass("%s facade albedo is neutral concrete (%.3f, %.3f, %.3f)" % [
+				script_path, effective.x, effective.y, effective.z])
+
+
+func _read_facade_tint(script_path: String) -> Vector3:
+	if not FileAccess.file_exists(script_path):
+		return Vector3.ZERO
+	var regex := RegEx.new()
+	if regex.compile(r"FACADE_TINT\s*:=\s*Color\s*\(\s*([0-9.]+)\s*,\s*([0-9.]+)\s*,\s*([0-9.]+)") != OK:
+		return Vector3.ZERO
+	var m := regex.search(FileAccess.get_file_as_string(script_path))
+	if m == null:
+		return Vector3.ZERO
+	return Vector3(m.get_string(1).to_float(), m.get_string(2).to_float(), m.get_string(3).to_float())
 
 
 func _check_autoloads() -> void:

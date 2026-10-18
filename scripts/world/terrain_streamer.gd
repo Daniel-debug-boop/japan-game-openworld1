@@ -323,6 +323,28 @@ func clear_all() -> void:
 	_chunks.clear()
 
 
+## Returns the highest point of the region (the Higashiyama hills). Used to frame a
+## real-elevation vista for visual acceptance.
+func find_viewpoint() -> Vector3:
+	if _heights.is_empty():
+		return Vector3.ZERO
+	var step := maxi(1, _hm_w / 64)
+	var best := Vector3.ZERO
+	var best_h := -INF
+	for iy in range(0, _hm_h, step):
+		for ix in range(0, _hm_w, step):
+			var h := _heights[iy * _hm_w + ix]
+			if h <= best_h:
+				continue
+			best_h = h
+			best = Vector3(
+				-_world_x * 0.5 + (_world_x * float(ix) / float(_hm_w - 1)),
+				h,
+				-_world_z * 0.5 + (_world_z * float(iy) / float(_hm_h - 1))
+			)
+	return best
+
+
 ## Returns a random walkable point inside the region, snapped to terrain.
 func find_spawn_point(seed_value: int = 0) -> Vector3:
 	var rng := RandomNumberGenerator.new()

@@ -76,9 +76,43 @@ Current result: `terrain_chunks=99 city_chunks=99 lanterns=8 player=yes` → `RE
 | Gamepad input | No device | Plug in a controller; axes are not bound yet (see feature matrix) |
 | Long-session streaming stability | Runtime budget | Walk the full 4 km region for ~10 minutes and watch the FPS/chunk counters |
 | Save/load round-trip | Not yet automated | Pause → Save Game → quit → Continue |
-| Screenshot capture | Headless GL cannot read back viewport textures | Run `tests/capture_screenshots.tscn` on a machine with a display (Xvfb or physical); see `BUILD.md` |
+| Screenshot capture | **Automated** now | `bash tools/visual_acceptance.sh build_output/visual_diag` — provisions a display, captures from the packaged build, verifies the pixels. Still needs a machine that can create a graphics context (Xvfb + Mesa counts) |
+| Real-GPU frame rate | T4/Vulkan ICD not available in the verification environment | Run the acceptance script with `RENDER_DRIVER=vulkan` on the target GPU and read the FPS counter in the captured HUD |
 
 These are reported as **unverified** rather than passing.
+
+---
+
+## Visual acceptance (graphical, not headless)
+
+`tools/visual_acceptance.sh` is the graphical counterpart to the headless suite. It is the
+only check that can answer "does the game render Kyoto?".
+
+Two independent halves must both pass, so neither can fake the other:
+
+1. **In-game** (`scripts/tools/visual_capture.gd`, runs in the packaged build) records the
+   renderer identity, the resident geometry counts (terrain chunks, OSM city chunks, PLATEAU
+   tiles, road/building/PLATEAU mesh counts) and per-image statistics into
+   `capture_report.json`, and fails when a shot is blank, duplicated, or was taken with no
+   terrain/city geometry resident.
+2. **Offline** (`tools/verify_screenshots.py`) re-opens the PNGs and measures them directly:
+   standard deviation (flat-image detector), mean luminance (black-frame detector), distinct
+   colour buckets, green dominance (material regression detector) and pairwise difference
+   (duplicate-viewpoint detector).
+
+Measured on the packaged build in the verification environment (Mesa llvmpipe, OpenGL,
+`active_backend=opengl`), which is a *software* renderer — a T4 with a Vulkan ICD uses
+Forward+ instead:
+
+| Shot | Resolution | Mean | Std-dev | Distinct colours | Green dominance |
+|---|---|---|---|---|---|
+| `01_player_view` | 1280x704 | 133.1 | 41.8 | 398 | -4.57 |
+| `02_street_level` | 1280x704 | 41.1 | 52.5 | 176 | -6.29 |
+| `03_city_overview` | 1280x704 | 140.4 | 37.2 | 216 | -3.84 |
+| `04_plateau_buildings` | 1280x704 | 166.9 | 35.6 | 232 | -3.94 |
+| `05_hills_vista` | 1280x704 | 154.9 | 24.3 | 227 | -5.39 |
+
+Resident geometry at capture time: 8 terrain chunks, 8 OSM city chunks, up to 18 PLATEAU tiles.
 
 ---
 

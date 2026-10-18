@@ -1,0 +1,138 @@
+{
+	"failures": [],
+	"generated_utc": "2026-10-17T19:44:04",
+	"out_dir": "/workspace/chats/51adb5b5ab6c0f2a4385ab00/build_output/visual_diag/after",
+	"renderer": {
+		"active_backend": "opengl",
+		"display_driver": "X11",
+		"project_method": "forward_plus",
+		"user_args": [
+			"--visual-capture=/workspace/chats/51adb5b5ab6c0f2a4385ab00/build_output/visual_diag/after"
+		],
+		"video_adapter": "llvmpipe (LLVM 20.1.2, 256 bits)",
+		"video_api_version": "4.5 (Core Profile) Mesa 25.2.8-0ubuntu0.24.04.4",
+		"window_size": [
+			640,
+			480
+		]
+	},
+	"result": "PASS",
+	"shots": [
+		{
+			"building_meshes": 0,
+			"camera_fov": 72.0,
+			"camera_position": [
+				-82.4400024414062,
+				51.7733955383301,
+				59.0399971008301
+			],
+			"city_chunks": 8,
+			"distinct_colors": 265,
+			"file": "01_player_view.png",
+			"hash": "573157721",
+			"height": 704,
+			"mean": 133.36194645313,
+			"name": "01_player_view",
+			"plateau_available": true,
+			"plateau_meshes": 0,
+			"plateau_tiles": 6,
+			"road_meshes": 8,
+			"stddev": 43.3830961077882,
+			"terrain_chunks": 8,
+			"width": 1280
+		},
+		{
+			"building_meshes": 0,
+			"camera_fov": 70.0,
+			"camera_position": [
+				-82.3970260620117,
+				52.3325729370117,
+				55.1689834594727
+			],
+			"city_chunks": 8,
+			"distinct_colors": 146,
+			"file": "02_street_level.png",
+			"hash": "2739345568",
+			"height": 704,
+			"mean": 45.7412765927902,
+			"name": "02_street_level",
+			"plateau_available": true,
+			"plateau_meshes": 0,
+			"plateau_tiles": 10,
+			"road_meshes": 8,
+			"stddev": 53.272280450001,
+			"terrain_chunks": 8,
+			"width": 1280
+		},
+		{
+			"building_meshes": 0,
+			"camera_fov": 62.0,
+			"camera_position": [
+				-212.440002441406,
+				144.92268371582,
+				-74.5599975585938
+			],
+			"city_chunks": 8,
+			"distinct_colors": 179,
+			"file": "03_city_overview.png",
+			"hash": "1792598048",
+			"height": 704,
+			"mean": 141.440221587741,
+			"name": "03_city_overview",
+			"plateau_available": true,
+			"plateau_meshes": 0,
+			"plateau_tiles": 14,
+			"road_meshes": 8,
+			"stddev": 37.6755184943703,
+			"terrain_chunks": 8,
+			"width": 1280
+		},
+		{
+			"building_meshes": 0,
+			"camera_fov": 58.0,
+			"camera_position": [
+				-11.7099990844727,
+				104.216781616211,
+				147.755004882812
+			],
+			"city_chunks": 8,
+			"distinct_colors": 236,
+			"file": "04_plateau_buildings.png",
+			"hash": "1455061542",
+			"height": 704,
+			"mean": 168.638817923961,
+			"name": "04_plateau_buildings",
+			"plateau_available": true,
+			"plateau_meshes": 0,
+			"plateau_tiles": 18,
+			"road_meshes": 8,
+			"stddev": 39.6470288249525,
+			"terrain_chunks": 8,
+			"width": 1280
+		},
+		{
+			"building_meshes": 2,
+			"camera_fov": 66.0,
+			"camera_position": [
+				1653.0078125,
+				353.388397216797,
+				1204.62622070312
+			],
+			"city_chunks": 14,
+			"distinct_colors": 161,
+			"file": "05_hills_vista.png",
+			"hash": "4217833476",
+			"height": 704,
+			"mean": 154.899762706359,
+			"name": "05_hills_vista",
+			"plateau_available": true,
+			"plateau_meshes": 0,
+			"plateau_tiles": 3,
+			"road_meshes": 14,
+			"stddev": 25.0336216858535,
+			"terrain_chunks": 6,
+			"width": 1280
+		}
+	],
+	"warnings": []
+}

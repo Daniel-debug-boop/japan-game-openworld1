@@ -187,9 +187,32 @@ required notice.
 
 ## Visual capture (screenshots)
 
-The test harness `tests/capture_screenshots.gd` / `.tscn` can render annotated
-screenshots of the running game to `user://screenshots/`. This is for **manual visual
-validation on real hardware**, not for headless CI.
+Graphical capture is **automated**. `tools/visual_acceptance.sh` provisions a display,
+runs the **packaged** game with a real graphics backend, captures five framed views of
+the streamed world (plus an optional gameplay video) and verifies the pixels. The
+packaged binary drives the capture itself via `-- --visual-capture=DIR`, so the same
+code path that ships is the one under test (`tests/*` is excluded from the export, which
+is why the driver lives in `scripts/tools/visual_capture.gd`).
+
+```bash
+bash tools/visual_acceptance.sh build_output/visual_diag
+```
+
+Environment knobs: `RENDER_DRIVER` (`opengl3` default, `vulkan` on a GPU with a working
+Vulkan ICD), `VIDEO_FRAMES`, `RESOLUTION`, `SKIP_DISPLAY=1`.
+
+What that run has to survive, and why each check exists:
+
+| Check | Failure it catches |
+|---|---|
+| Framebuffer orientation probe | Readback Y orientation is measured with red/blue probe bands instead of assumed, and recorded per shot (`orientation_corrected`) |
+| Stable camera up axis | `look_at(at, Vector3.UP)` is ill-conditioned for near-vertical views and can roll the camera over — the original inverted frame |
+| Recorded camera geometry | `camera_up_dot_world_up`, pitch and camera-vs-terrain height are written per shot so orientation is measured, not eyeballed |
+| Streaming-aware settle per shot | Shots taken before terrain/city/PLATEAU chunks were resident, which photographed an empty plain |
+| Camera anchored to the player | Vantage points parked hundreds of metres outside the stream radius |
+| Non-blank, non-duplicate pixel analysis | Flat, black or repeated frames passing as evidence |
+| `*.pmesh` in the export filter | The packaged game silently shipping zero PLATEAU geometry |
+| Effective facade albedo check | `painted_concrete` is a green-painted wall; used raw it turns the whole city mint-green |
 
 ### Known limitation
 
@@ -200,13 +223,15 @@ renderer, not a bug in the harness. Screenshot capture therefore:
 
 - works only with a real display + a real OpenGL/Vulkan context (windowed or Xvfb);
 - does **not** work in `--headless` mode;
-- is **not** part of the automated build pipeline.
+- **is** part of the automated pipeline (`tools/visual_acceptance.sh`), and fails the
+  run when the runtime cannot produce a graphics context instead of silently passing.
 
-To capture on a machine with a display:
+To capture from the editor instead of the packaged build:
 
 ```bash
-DISPLAY=:99 godot --path . --rendering-driver opengl3 \
-    --resolution 1600x900 --windowed res://tests/capture_screenshots.tscn
+bash tools/setup_software_display.sh && source .cache/xvfb/env.sh
+godot --path . --rendering-driver opengl3 \
+    --resolution 1280x720 res://tests/capture_screenshots.tscn
 ```
 
 (With Xvfb: see `tools/setup_software_display.sh`.) The harness writes PNGs to
@@ -223,4 +248,7 @@ DISPLAY=:99 godot --path . --rendering-driver opengl3 \
 | No buildings in the game | `assets/world/buildings.dat` missing or magic invalid → run `python3 tools/build_world.py`. |
 | `Could not parse global class` | A GDScript parse error; run `godot --headless --path . --import` and read the first `SCRIPT ERROR`. |
 | PLATEAU tiles not showing | Run `python3 tools/fetch_plateau.py` (requires DracoPy); check `build_output/logs/plateau_fetch.log`. |
-| Screenshots save to `null` / capture produces 0 PNGs | Headless mode cannot read back viewport textures. Run with a real display (Xvfb or physical monitor). |
+| Screenshots save to `null` / capture produces 0 PNGs | Headless mode cannot read back viewport textures. Run with a real display (Xvfb or physical monitor) via `tools/visual_acceptance.sh`. |
+| `libfontconfig.so.1` / `libfreetype.so.6` / `libXcursor.so.1: cannot open shared object file`, then `Unable to create DisplayServer` | The software-display bootstrap is incomplete. `tools/setup_software_display.sh` installs the full transitive library set, provides `xkbcomp` where Xvfb looks for it, and *verifies* the display came up before returning success. |
+| Screenshots have ground above and sky below | Not a readback flip: the camera is rolled over, which `look_at` does when the view direction is nearly parallel to the up vector. Check `camera_up_dot_world_up` in `capture_report.json`; `_up_for()` in the driver picks a stable up axis. |
+| Packaged game has no PLATEAU buildings but the editor does | `export_presets.cfg` must include `*.pmesh` in `include_filter`; without it the PCK ships the index but none of the geometry and the loader falls back to OSM boxes. |

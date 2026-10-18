@@ -1,0 +1,29 @@
+{
+  "project": "Japan Open World",
+  "godot_version": "4.6.3",
+  "godot_binary": "/workspace/chats/51adb5b5ab6c0f2a4385ab00/.cache/godot/Godot_v4.6.3-stable_linux.x86_64",
+  "platform": "Linux/X11 x86_64",
+  "export_preset": "Linux/X11",
+  "duration_seconds": 35,
+  "artifacts": {
+    "executable": "japan_open_world.x86_64",
+    "pck": "japan_open_world.pck",
+    "archive": "japan_open_world-linux-x86_64.tar.gz",
+    "checksums": "SHA256SUMS.txt"
+  },
+  "world": {
+    "region": "Kyoto Central",
+    "terrain_source": "AWS Open Data terrain-tiles (Terrarium)",
+    "osm_source": "OpenStreetMap via Overpass (ODbL 1.0)",
+    "materials_source": "Poly Haven (CC0 1.0)"
+  },
+  "plateau": {"source": "PLATEAU (MLIT Japan)", "indexed_tiles": 193, "present_meshes": 193, "triangles": 1946208, "vertical_offset_m": -30.44, "licence": "CC BY 4.0"},
+  "checks": {
+    "import": "pass",
+    "validation": "pass",
+    "runtime_smoke": "pass",
+    "export": "pass",
+    "packaged_smoke": "pass"
+  },
+  "generated_utc": "2026-10-17T20:23:57Z"
+}

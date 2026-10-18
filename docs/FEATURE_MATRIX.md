@@ -41,7 +41,11 @@ Evidence column names the exact check that proves the claim.
 | Occlusion culling | Implemented | `occlusion_culling/use_occlusion_culling=true` |
 | Distance LOD on terrain | Not implemented | Single mesh resolution per chunk |
 | FSR / upscaling | Not implemented | Only viewport scaling (`scaling_3d_scale`) |
-| Visual acceptance on real hardware | **Unverified** | No GPU display in build environment |
+| Automated graphical capture (packaged build) | Implemented & tested | `tools/visual_acceptance.sh` — 5 framed views, `capture_report.json`, exit 0 on the packaged binary |
+| Framebuffer orientation correction | Implemented & tested | On-screen red/blue probe bands; without it the Compatibility renderer saved inverted PNGs |
+| Non-blank / non-duplicate image analysis | Implemented & tested | `tools/verify_screenshots.py` — stddev, luminance, colour buckets, green dominance, pairwise difference |
+| Visual acceptance on a real GPU (Tesla T4) | **Unverified** | Verified on Mesa llvmpipe (software OpenGL) only; no Vulkan ICD in the verification environment |
+| Frame rate on target hardware | **Unverified** | Software renderer measured single-digit FPS, which says nothing about a GPU |
 
 ## Gameplay
 
@@ -67,10 +71,12 @@ Evidence column names the exact check that proves the claim.
 | Reproducible data pipeline | Implemented & tested | `tools/build_world.py`, cached + `--force` |
 | Pinned engine + templates with SHA-256 | Implemented & tested | checksums enforced in `build_release.sh` |
 | Asset hashing manifest | Implemented & tested | `DEPENDENCIES.lock`, `ASSET_MANIFEST.md` generated from real hashes |
-| Static validation suite | Implemented & tested | 59 assertions, exit 0 (incl. PLATEAU index/offset/source/vertical-offset checks) |
+| Static validation suite | Implemented & tested | 69 assertions, exit 0 (incl. PLATEAU index/offset/source/vertical-offset checks and effective facade albedo) |
 | Runtime smoke test | Implemented & tested | 20 assertions, exit 0 (terrain, OSM, PLATEAU streaming, lantern objectives) |
+| PLATEAU `.pmesh` payloads present in the exported PCK | Implemented & tested | Packaged smoke test reports `plateau_available=yes plateau_tiles=18` (this was broken: no `*.pmesh` in `include_filter`) |
 | Packaged-build smoke test | Implemented & tested | exported binary exits 0 |
-| Colab notebook | Implemented, unverified | Notebook lists the PLATEAU fetch step (DracoPy-dependent); not executed inside this environment |
+| Colab notebook | Implemented, unverified | Builds, validates, exports, archives **and** runs the graphical acceptance stage (cell 3b); not executed inside this environment |
+| Software-display bootstrap | Implemented & tested | `tools/setup_software_display.sh` installs the full library set, supplies `xkbcomp` via a user namespace, and verifies the display came up |
 | CI workflow | Implemented, unverified | Authored; not yet run on GitHub-hosted runners |
 | meshoptimizer offline bake | Not implemented | See `BUILD.md` rationale |
 | Terrain3D native addon | Not implemented (evaluated) | No prebuilt binaries; see `BUILD.md` |

@@ -68,6 +68,20 @@ func _ready() -> void:
 	GameManager.on_world_ready(_lanterns.size())
 	_loaded = true
 
+	# Visual acceptance: run the capture driver against the real streaming world and
+	# exit with its verdict. Works in the exported build because the driver lives
+	# under scripts/ (the export preset excludes tests/).
+	if GameManager.capture_mode:
+		_run_visual_capture.call_deferred()
+
+
+func _run_visual_capture() -> void:
+	var capture := VisualCapture.new()
+	capture.name = "VisualCapture"
+	add_child(capture)
+	await capture.run(self, GameManager.capture_out_dir, GameManager.capture_video_frames)
+	get_tree().quit(capture.exit_code())
+
 
 func _load_meta() -> void:
 	if not FileAccess.file_exists(META_PATH):

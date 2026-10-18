@@ -4,12 +4,7 @@
 *.remap
 
 # Build outputs
-build_output/
 builds/
-*.tar.gz
-*.pck
-*.x86_64
-SHA256SUMS.txt
 
 # Downloaded toolchain and cached archives
 .cache/
@@ -46,3 +41,18 @@ assets/plateau/*/*.pmesh
 # Temporary / partial downloads
 *.part
 *.tmp
+
+# Local runtime diagnostics and screenshots (not shipped) — except the
+# pixel-verified V1 capture evidence, which is not ignored below.
+build_output/visual_diag/
+build_output/screenshots/
+
+# Do NOT ignore the V1 release package.
+!release/
+!release/RELEASE_NOTES.md
+!release/V1_SHIPMENT_PACKAGE.md
+
+# Do NOT ignore the already-captured pixel-verified V1 evidence.
+!build_output/visual_diag/after/
+!build_output/visual_diag/after/capture_report.json
+!build_output/visual_diag/after/*.png

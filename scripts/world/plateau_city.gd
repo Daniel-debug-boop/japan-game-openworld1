@@ -20,6 +20,13 @@ signal tile_loaded(index: int)
 const INDEX_PATH := "res://assets/plateau/index.json"
 const PMSH_MAGIC := "PMSH"
 
+## Per-channel correction applied to the facade albedo, solved from the measured mean
+## of `painted_concrete`'s albedo (72,106,79) — a green-painted wall — so real PLATEAU
+## geometry is not rendered green:
+##   (0.282, 0.416, 0.310) * (1.30, 0.88, 1.20) = (0.367, 0.366, 0.372)
+## tests/validate_project.gd asserts the resulting effective albedo stays neutral.
+const FACADE_TINT := Color(1.30, 0.88, 1.20)
+
 ## How many tiles may be built per frame, so streaming never spikes the frame.
 const LOADS_PER_FRAME := 2
 
@@ -58,7 +65,7 @@ func _build_material() -> void:
 	_material = StandardMaterial3D.new()
 	# PLATEAU non-textured LOD2 carries geometry only; shade it as painted
 	# concrete/mortar so it reads as a Japanese city block rather than white boxes.
-	_material.albedo_color = Color(0.80, 0.79, 0.76)
+	_material.albedo_color = FACADE_TINT
 	_material.roughness = 0.82
 	_material.metallic = 0.0
 	_material.uv1_triplanar = true
@@ -309,6 +316,47 @@ func get_stats() -> Dictionary:
 
 func get_loaded_tile_count() -> int:
 	return _loaded.size()
+
+
+## Centre of the indexed tile nearest `from`, in world metres, or Vector3.ZERO when
+## there is no index. Used to frame the real PLATEAU geometry for visual acceptance.
+func get_nearest_tile_center(from: Vector3) -> Vector3:
+	var best := Vector3.ZERO
+	var best_d := INF
+	for t: Dictionary in _tiles:
+		var b: Array = t.get("bounds", [])
+		if b.size() < 6:
+			continue
+		var c := Vector3(
+			(float(b[0]) + float(b[3])) * 0.5,
+			(float(b[1]) + float(b[4])) * 0.5 + vertical_offset,
+			(float(b[2]) + float(b[5])) * 0.5
+		)
+		var d := Vector2(c.x - from.x, c.z - from.z).length()
+		if d < best_d:
+			best_d = d
+			best = c
+	return best
+
+
+## Bounds of the loaded tile nearest `from`, as a Dictionary with "size" (Vector3)
+## and "position", or an empty Dictionary when nothing is loaded nearby.
+func get_nearest_loaded_bounds(from: Vector3) -> Dictionary:
+	var best := {}
+	var best_d := INF
+	for i: int in _loaded.keys():
+		var b: Array = _tiles[i].get("bounds", [])
+		if b.size() < 6:
+			continue
+		var centre := Vector2((float(b[0]) + float(b[3])) * 0.5, (float(b[2]) + float(b[5])) * 0.5)
+		var d := Vector2(centre.x - from.x, centre.y - from.z).length()
+		if d < best_d:
+			best_d = d
+			best = {
+				"size": Vector3(float(b[3]) - float(b[0]), float(b[4]) - float(b[1]), float(b[5]) - float(b[2])),
+				"position": Vector3(centre.x, float(b[1]) + vertical_offset, centre.y),
+			}
+	return best
 
 
 func get_available_tile_count() -> int:
